@@ -1,6 +1,7 @@
 import sys;
 import MySQLdb;
 import getpass;
+from warnings import filterwarnings 
 def enter():
         count = 0;
         print("Hello and Welcome\n");
@@ -9,7 +10,6 @@ def enter():
             Database()
             while(count < 5):
               username = raw_input("Enter username \n")
-              time.sleep(0.5);
               password = getpass.getpass("enter password\n")
               print("\n processing... ")
               if(Login_check(username, password) == True):
@@ -20,6 +20,7 @@ def enter():
 def Database():
      db = MySQLdb.connect(host = "localhost",user = "root",passwd = "Be761ran091*")
      cursor = db.cursor()
+     filterwarnings('ignore', category = MySQLdb.Warning)
      cursor.execute("CREATE DATABASE IF NOT EXISTS data")
      db = MySQLdb.connect(host = "localhost",user = "root",passwd = "Be761ran091*",db = "data")
      cursor = db.cursor()
