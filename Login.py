@@ -1,23 +1,37 @@
-import time;
 import sys;
+import MySQLdb;
+import getpass;
 def enter():
         count = 0;
         print("Hello and Welcome\n");
-        time.sleep(1);
         a = raw_input("What would you like to do?\n");
-        time.sleep(1.2);
         if(Lexi(a) == "login"):
+            Database()
             while(count < 5):
               username = raw_input("Enter username \n")
               time.sleep(0.5);
-              password = raw_input("enter password\n")
+              password = getpass.getpass("enter password\n")
               print("\n processing... ")
-              time.sleep(0.5);
               if(Login_check(username, password) == True):
                 loggedin();
               else:
                   print("Wrong user name or password")
                   count = count + 1;
+def Database():
+     db = MySQLdb.connect(host = "localhost",user = "root",passwd = "Be761ran091*")
+     cursor = db.cursor()
+     cursor.execute("CREATE DATABASE IF NOT EXISTS data")
+     db = MySQLdb.connect(host = "localhost",user = "root",passwd = "Be761ran091*",db = "data")
+     cursor = db.cursor()
+     cursor.execute("CREATE TABLE IF NOT EXISTS main(USERNAME VARCHAR(20), PASSWORD VARCHAR(20))")
+     cursor.execute("Select * FROM main")
+     dat = cursor.fetchall() 
+     db.close()
+     if len(dat)==0 :
+       print("Seems like a user does not exist. Creating a useer");
+       createSuper();
+
+
 def Lexi(text):
         arr = text.split();
         arr2 = []
@@ -29,39 +43,42 @@ def Lexi(text):
             return "login";
         if "superuser" in arr or "create" in arr:
             return "superuser"
+        if "different" in arr and "user" in arr:
+            return "dif_user"
+
+
 
 def Login_check(username, password):
-    f = open("Passkey.txt","r");
-    credentials = f.read();
-    f.close();
-    print(credentials)
-    if credentials == "":
-        print("Seems like a user does not exist")
-        a = raw_input("Would you like to create one?(Yes||No)\n")
-        a = a.lower()
-        if a == "yes":
-            createSuper()
-            return True
-        else:
-            sys.exit(0)
+    db = MySQLdb.connect(host = "localhost",user = "root",passwd = "Be761ran091*",db = "data")
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM main")
+    data = cursor.fetchall()
+    for row in data:
+        user = row[0]
+        passk = row[1] 
+        if(user == username and passk == password):
+          return True;
 
-    else:
-        if username in credentials and password in credentials:
-            return True
-        else:
-            return False
+
 def createSuper():
     name = raw_input("Enter Username")
-    passk = raw_input("Enter Password")
-    passk2 = raw_input("Enter Password Again")
+    passk = getpass.getpass("Enter Password")
+    passk2 = getpass.getpass("Enter Password Again")
     if(passk != passk2):
         print("Passwords don't match")
         createSuper()
     else:
-       f = open("Passkey.txt","w") 
-       f.write("\n"name+" "+passk+"  ")
-       f.close()
-       return True
+        db = MySQLdb.connect(host = "localhost",user = "root",passwd = "Be761ran091*",db = "data")
+        cursor = db.cursor()
+        print("Committing") 
+        cursor.execute("INSERT INTO main (USERNAME,PASSWORD) VALUES ('%s','%s')"%(name,passk))
+        cursor.execute("SELECT * FROM main")
+        data = cursor.fetchall()
+        db.commit()
+        db.close()
+        return True
+
+
 def loggedin():
     while(True):
      print("You are now Logged in")
@@ -70,7 +87,8 @@ def loggedin():
          sys.exit(0)
      elif Lexi(ins) == "superuser":
          createSuper()
-    
+     elif Lexi(ins) == "dif_user":
+        enter()
 
 enter();
     
